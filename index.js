@@ -2,8 +2,8 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
- const User = require("./models/user.model");
-// const AddBlog = require("../Server/models/Addblog");
+//  const User = require("./models/user.model");
+ const Shopping = require("./models/shopping.model");
 const axios = require("axios");
 require("dotenv").config();
 
@@ -13,95 +13,42 @@ app.use(express.json());
 app.use(cors());
 
 const connect = () => {
-  var password = process.env.pass;
+  let password = process.env.pass;
   return mongoose.connect(
-    `mongodb+srv://Nishant:${encodeURIComponent(
-      password
-    )}@blogmongo.vsvctff.mongodb.net/NishantBlog`
+    `mongodb+srv://Nishant:${password}@cluster0.k7kiurw.mongodb.net/?retryWrites=true&w=majority`
   );
 };
 
-app.post("/api/register", async (req, res) => {
+app.post("/shoppingDetails", async (req, res) => {
   console.log(req.body);
   try {
-    // const role =
-    //   req.body.email === process.env.admin_mail ? "admin" : "creator";
-    await User.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
+    let response = await Shopping.create({
+      title: req.body.title,
+      quantity: req.body.quantity,
+      priority: req.body.priority,
+      description:req.body.description
     });
+    console.log(response)
+    res.json({ status: "ok" , data:response});
+  } catch (err) {
+    console.log(err)
+    res.json({ status: "error", error: "duplicate title or something went wrong" });
+  }
+});
+app.delete("/shoppingDetails", async (req, res) => {
+  console.log(req.body);
+  let id = req.query.title
+  try {
+    let res= Shopping.findOneAndDelete({title:id})
     res.json({ status: "ok" });
   } catch (err) {
-    res.json({ status: "error", error: "duplicate email" });
+    console.log(err)
+    res.json({ status: "error", error: err });
   }
 });
 
 
-app.post("/api/log", async (req, res) => {
-  console.log(req.body);
 
-  const user = await User.findOne({
-    email: req.body.email,
-    // password: req.body.password,
-  });
-  if (user) {
-    const token = `${req.body.email}${Math.random() * 10}`
-
-    return res.json({ status: "ok", user: token});
-  } else {
-    return res.json({ status: "error", user: false });
-  }
-});
-
-app.post("/api/userDetails", async (req, res) => {
-  console.log(req.body.email);
-
-  const user = await User.findOne({
-    email: req.body.email,
-  }).populate();
-  if (user) {
-    return res.json({ status: "ok", detail:user});
-  } else {
-    return res.json({ status: "error", mssg:"no user found with this mail" });
-  }
-});
-
-app.get("/api/calEmi", async (req, res) => {
-  // console.log(req.body.email);
-  let P = req.body.Principal;
-  let r = req.body.rateOfInterest;
-  let n = req.body.duration;
-
-  if(P && r && n){
-    E = P * r * ( 1 + r ) * n / ( ( 1 + r )* n - 1 ) ;
-    return res.json({ status: "ok", Emi:{
-      emi:E,
-      duration:req.body.duration,
-      repayableAmount:E*r
-    }});
-
-  }
- else {
-    return res.json({ status: "error", mssg:"no user found with this mail" });
-  }
-});
-
-app.post("/api/logot", async (req, res) => {
-  console.log(req.body);
-
-  const user = await User.findOne({
-    email: req.body.email,
-    password: req.body.password,
-  });
-  if (user) {
-    const token = null
-
-    return res.json({ status: "ok", user: false , token});
-  } else {
-    return res.json({ status: "error", msg:"user trying to logout does not exist" });
-  }
-});
 
 
 
